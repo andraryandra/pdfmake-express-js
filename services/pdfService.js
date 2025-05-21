@@ -112,12 +112,34 @@ function textHeader(
   }
 }
 
-function formatDate(dateString) {
+function formatDate(dateString, formatType = "default") {
   if (!dateString) return "";
+
   const date = new Date(dateString);
   const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0"); // bulan dari 0
   const year = date.getFullYear();
+
+  if (formatType === "monthName") {
+    const months = [
+      "Januari",
+      "Februari",
+      "Maret",
+      "April",
+      "Mei",
+      "Juni",
+      "Juli",
+      "Agustus",
+      "September",
+      "Oktober",
+      "November",
+      "Desember",
+    ];
+    const monthName = months[date.getMonth()];
+    return `${day} ${monthName} ${year}`;
+  }
+
+  // default: dd-mm-yyyy
+  const month = String(date.getMonth() + 1).padStart(2, "0");
   return `${day}-${month}-${year}`;
 }
 
@@ -224,12 +246,17 @@ function getHeader(departmentType, currentPage, pageCount, images, demography) {
                           [
                             textLocales("jenisKelamin"),
                             { text: ":" },
-                            textHeader(demography?.gender || ""),
+                            textHeader(
+                              demography?.gender === "M" ? "Male" : "Female"
+                            ),
                           ],
                           [
                             textLocales("tglPeriksa"),
                             { text: ":" },
-                            textHeader(formatDate(demography?.examDate) || "-"),
+                            textHeader(
+                              formatDate(demography?.examDate, "monthName") ||
+                                "-"
+                            ),
                           ],
                           [
                             textLocales("dokter"),
