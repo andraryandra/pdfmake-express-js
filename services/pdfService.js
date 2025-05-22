@@ -1,9 +1,13 @@
+require("dotenv").config();
 const PdfPrinter = require("pdfmake");
 const fs = require("fs");
 const path = require("path");
 const locales = require("./locale/tuv-locale");
 
-require("dotenv").config();
+const htmlToPdfMake = require("html-to-pdfmake");
+const { JSDOM } = require("jsdom");
+const window = new JSDOM("").window;
+const dom = new JSDOM();
 
 /**
  * Membaca file aset secara async dan mengembalikan buffer-nya.
@@ -335,7 +339,7 @@ function getFooter(
     }
   }
   const signature = {
-    absolutePosition: { x: 350, y: -40 },
+    absolutePosition: { x: 350, y: -120 },
     table: {
       widths: ["auto"],
       body: [
@@ -369,30 +373,30 @@ function getFooter(
   };
 
   if (doctorNameToShow) {
-    commonFooterDefault.push(signature);
+    // commonFooterDefault.push(signature);
   }
 
   const informationSite = {
-    absolutePosition: { x: 40, y: 90 },
+    absolutePosition: { x: 40, y: 20 },
     margin: [0, 10, 0, 0],
     alignment: "center",
     stack: [
       {
         text: "KLINIK UTAMA TÜV RHEINLAND MEDIKA INDONESIA",
-        fontSize: 13,
+        fontSize: 16,
         color: "#336ca4",
         bold: true,
         font: "Universe",
       },
       {
         text: "Mampang Business Park Ruko, JI. Hj Tutty Alawiyah No.301 Blok B",
-        fontSize: 10,
+        fontSize: 12,
         color: "#336ca4",
         font: "Universe",
       },
       {
         text: "No. 08 & 09, Duren Tiga, Pancoran, South Jakarta City, Jakarta 12760",
-        fontSize: 10,
+        fontSize: 12,
         color: "#336ca4",
         font: "Universe",
       },
@@ -405,11 +409,15 @@ function getFooter(
     },
     {
       id: "svg2",
-      svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path fill="#fafafa" d="M352 256c0 22.2-1.2 43.6-3.3 64l-185.3 0c-2.2-20.4-3.3-41.8-3.3-64s1.2-43.6 3.3-64l185.3 0c2.2 20.4 3.3 41.8 3.3 64zm28.8-64l123.1 0c5.3 20.5 8.1 41.9 8.1 64s-2.8 43.5-8.1 64l-123.1 0c2.1-20.6 3.2-42 3.2-64s-1.1-43.4-3.2-64zm112.6-32l-116.7 0c-10-63.9-29.8-117.4-55.3-151.6c78.3 20.7 142 77.5 171.9 151.6zm-149.1 0l-176.6 0c6.1-36.4 15.5-68.6 27-94.7c10.5-23.6 22.2-40.7 33.5-51.5C239.4 3.2 248.7 0 256 0s16.6 3.2 27.8 13.8c11.3 10.8 23 27.9 33.5 51.5c11.6 26 20.9 58.2 27 94.7zm-209 0L18.6 160C48.6 85.9 112.2 29.1 190.6 8.4C165.1 42.6 145.3 96.1 135.3 160zM8.1 192l123.1 0c-2.1 20.6-3.2 42-3.2 64s1.1 43.4 3.2 64L8.1 320C2.8 299.5 0 278.1 0 256s2.8-43.5 8.1-64zM194.7 446.6c-11.6-26-20.9-58.2-27-94.6l176.6 0c-6.1 36.4-15.5 68.6-27 94.6c-10.5 23.6-22.2 40.7-33.5 51.5C272.6 508.8 263.3 512 256 512s-16.6-3.2-27.8-13.8c-11.3-10.8-23-27.9-33.5-51.5zM135.3 352c10 63.9 29.8 117.4 55.3 151.6C112.2 482.9 48.6 426.1 18.6 352l116.7 0zm358.1 0c-30 74.1-93.6 130.9-171.9 151.6c25.5-34.2 45.2-87.7 55.3-151.6l116.7 0z"/></svg>`,
+      svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path fill="#ffffff" d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4L236.8 313.6c11.4 8.5 27 8.5 38.4 0L492.8 150.4c12.1-9.1 19.2-23.3 19.2-38.4c0-26.5-21.5-48-48-48L48 64zM0 176L0 384c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-208L294.4 339.2c-22.8 17.1-54 17.1-76.8 0L0 176z"/></svg>`,
     },
     {
       id: "svg3",
-      svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path fill="#fafafa" d="M352 256c0 22.2-1.2 43.6-3.3 64l-185.3 0c-2.2-20.4-3.3-41.8-3.3-64s1.2-43.6 3.3-64l185.3 0c2.2 20.4 3.3 41.8 3.3 64zm28.8-64l123.1 0c5.3 20.5 8.1 41.9 8.1 64s-2.8 43.5-8.1 64l-123.1 0c2.1-20.6 3.2-42 3.2-64s-1.1-43.4-3.2-64zm112.6-32l-116.7 0c-10-63.9-29.8-117.4-55.3-151.6c78.3 20.7 142 77.5 171.9 151.6zm-149.1 0l-176.6 0c6.1-36.4 15.5-68.6 27-94.7c10.5-23.6 22.2-40.7 33.5-51.5C239.4 3.2 248.7 0 256 0s16.6 3.2 27.8 13.8c11.3 10.8 23 27.9 33.5 51.5c11.6 26 20.9 58.2 27 94.7zm-209 0L18.6 160C48.6 85.9 112.2 29.1 190.6 8.4C165.1 42.6 145.3 96.1 135.3 160zM8.1 192l123.1 0c-2.1 20.6-3.2 42-3.2 64s1.1 43.4 3.2 64L8.1 320C2.8 299.5 0 278.1 0 256s2.8-43.5 8.1-64zM194.7 446.6c-11.6-26-20.9-58.2-27-94.6l176.6 0c-6.1 36.4-15.5 68.6-27 94.6c-10.5 23.6-22.2 40.7-33.5 51.5C272.6 508.8 263.3 512 256 512s-16.6-3.2-27.8-13.8c-11.3-10.8-23-27.9-33.5-51.5zM135.3 352c10 63.9 29.8 117.4 55.3 151.6C112.2 482.9 48.6 426.1 18.6 352l116.7 0zm358.1 0c-30 74.1-93.6 130.9-171.9 151.6c25.5-34.2 45.2-87.7 55.3-151.6l116.7 0z"/></svg>`,
+      svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="#ffffff">
+  <g transform="scale(-1,1) translate(-512,0)">
+    <path d="M493.4 24.6l-104-24C375.8-2.1 360.2 5.4 352 18.5L288 128c-8.3 13.1-4.3 30.4 9 39.6l56 40c-36.5 71.5-97.4 132.5-168.9 168.9l-40-56c-9.2-13.3-26.5-17.3-39.6-9L18.5 352c-13.1 8.3-20.6 23.8-18.1 37.4l24 104C28.6 506.3 41.4 512 54.1 512c256.5 0 464-207.5 464-464 0-12.7-5.7-25.5-24.7-23.4z"/>
+  </g>
+</svg>`,
     },
     {
       id: "svgGradientColor",
@@ -430,10 +438,10 @@ function getFooter(
     informationSite,
     {
       svg: contentSVG[3].svg,
-      absolutePosition: { x: 0, y: 140 },
+      absolutePosition: { x: 0, y: 80 },
     },
     {
-      absolutePosition: { x: 0, y: 150 },
+      absolutePosition: { x: 0, y: 90 },
       columns: [
         {
           margin: [20, 0, 0, 0],
@@ -521,7 +529,7 @@ function textContent(
   if (hasEnglish) {
     return [
       { text: indonesia + " / ", ...optionsIndonesia, fontSize: 12 },
-      { text: english, ...optionsEnglish, color: "gray", fontSize: 12 },
+      { text: english, ...optionsEnglish, color: "gray", fontSize: 10 },
     ];
   } else {
     return [{ text: indonesia, ...optionsIndonesia, fontSize: 12 }];
@@ -531,15 +539,170 @@ function textContent(
 function stripHtmlToText(value) {
   if (!value || typeof value !== "string") return "";
 
-  return value
-    .replace(/<br\s*\/?>/gi, "\n") // Ganti <br> atau <br/> jadi newline
-    .replace(/<\/p>/gi, "\n\n") // Ganti </p> jadi double newline
-    .replace(/<p[^>]*>/gi, "") // Hilangkan <p> (buka tag)
-    .replace(/<[^>]+>/g, "") // Hapus semua tag HTML lainnya
-    .trim(); // Hilangkan spasi di awal/akhir
+  // Hapus paragraf kosong yang isinya cuma <br> atau spasi
+  value = value.replace(/<p>(\s|<br\s*\/?>)*<\/p>/gi, "");
+
+  let text = value
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
+    .replace(/<p[^>]*>/gi, "")
+    .replace(/<[^>]+>/g, "")
+    .trim();
+
+  // Kurangi multiple newline jadi satu newline supaya nggak terlalu jauh
+  text = text.replace(/\n{2,}/g, "\n");
+
+  return text;
+}
+
+function cleanInvisibleChars(str) {
+  return str.replace(/[\u200B-\u200D\uFEFF]/g, "");
+}
+
+function convertHtmlToPdfMake(value, option = {}) {
+  if (!value || typeof value !== "string") value = "";
+
+  value = cleanInvisibleChars(value)
+    .replace(/\*{4,}/g, "")
+    .replace(/[^\x20-\x7E\s]/g, "")
+    .replace(/<hr[^>]*>/gi, "<p>---</p>");
+
+  let pdfmakeContent = htmlToPdfMake(value, {
+    window,
+    imageTagClass: true,
+  });
+
+  if (!Array.isArray(pdfmakeContent)) {
+    pdfmakeContent = [pdfmakeContent];
+  }
+
+  const content = pdfmakeContent
+    .map((item) => processItem(item, option))
+    .filter((item) => item !== null);
+
+  return content;
+}
+
+// Fungsi rekursif untuk cek ada gambar base64 di dalam item
+function containsBase64Image(item, depth = 0, maxDepth = 5) {
+  if (!item || typeof item !== "object" || depth > maxDepth) return false;
+
+  if (typeof item.image === "string" && item.image.startsWith("data:image")) {
+    return true;
+  }
+
+  if (Array.isArray(item.stack)) {
+    return item.stack.some((i) => containsBase64Image(i, depth + 1, maxDepth));
+  }
+
+  if (Array.isArray(item.columns)) {
+    return item.columns.some((i) =>
+      containsBase64Image(i, depth + 1, maxDepth)
+    );
+  }
+
+  if (item.table && Array.isArray(item.table.body)) {
+    return item.table.body
+      .flat()
+      .some((i) => containsBase64Image(i, depth + 1, maxDepth));
+  }
+
+  return false;
+}
+
+// Modularisasi fungsi pemrosesan per item
+function processItem(item, option) {
+  const text = typeof item.text === "string" ? item.text.trim() : "";
+
+  if (text === "" && item.class?.includes("ql-align-justify")) {
+    return null;
+  }
+
+  if (text === "---") {
+    return {
+      canvas: [
+        {
+          type: "line",
+          x1: 0,
+          y1: 0,
+          x2: 450,
+          y2: 0,
+          lineWidth: 0.5,
+          lineColor: "#cccccc",
+        },
+      ],
+      margin: [0, 10, 0, 10],
+    };
+  }
+
+  // Hanya wrap jika ada gambar base64 di dalam item
+  const shouldWrap = containsBase64Image(item);
+  const wrappedItem = shouldWrap ? wrapImagesWithBorder(item) : item;
+
+  const isJustify =
+    wrappedItem.class?.includes("ql-align-justify") ||
+    wrappedItem.style?.includes("text-align:justify");
+
+  return {
+    ...wrappedItem,
+    fontSize: 12,
+    alignment: isJustify ? "justify" : "left",
+    lineHeight: 1.2,
+    margin: [0, 2, 0, 2],
+    ...option,
+  };
+}
+
+// Rekursif membungkus semua gambar dengan border (dalam stack/columns/table)
+function wrapImagesWithBorder(item) {
+  if (Array.isArray(item)) {
+    return item.map(wrapImagesWithBorder);
+  }
+
+  if (item.stack) {
+    return {
+      ...item,
+      stack: wrapImagesWithBorder(item.stack),
+    };
+  }
+
+  if (item.columns) {
+    return {
+      ...item,
+      columns: wrapImagesWithBorder(item.columns),
+    };
+  }
+
+  if (
+    item.image &&
+    typeof item.image === "string" &&
+    item.image.startsWith("data:image")
+  ) {
+    return {
+      table: {
+        widths: [440],
+        body: [
+          [
+            {
+              image: item.image,
+              width: 440,
+              margin: [0, 0, 0, 0],
+            },
+          ],
+        ],
+      },
+      layout: "noBorders",
+      margin: [0, 5, 0, 0],
+    };
+  }
+
+  // Bila bukan gambar dan tidak punya stack/columns/table, return apa adanya
+  return item;
 }
 
 function textContentValue(value, option = {}) {
+  if (!value || typeof value !== "string") value = "";
+
   const text = stripHtmlToText(value);
   return [{ text, fontSize: 12, ...option }];
 }
@@ -657,7 +820,7 @@ function getContentResultPhysicalExaminations(
     },
     {
       table: {
-        widths: [220, "*"], // Dua kolom besar
+        widths: [210, "*"], // Dua kolom besar
         body: [
           [
             {
@@ -674,7 +837,9 @@ function getContentResultPhysicalExaminations(
                       ),
                     },
                     ":",
-                    textContentValue(physicalExam?.height || ""),
+                    textContentValue(
+                      physicalExam?.height ? physicalExam?.height + " cm" : ""
+                    ),
                   ],
                   [
                     {
@@ -686,7 +851,9 @@ function getContentResultPhysicalExaminations(
                       ),
                     },
                     ":",
-                    textContentValue(physicalExam?.weight || ""),
+                    textContentValue(
+                      physicalExam?.weight ? physicalExam?.weight + " kg" : ""
+                    ),
                   ],
                   [
                     {
@@ -698,7 +865,9 @@ function getContentResultPhysicalExaminations(
                       ),
                     },
                     ":",
-                    textContentValue(physicalExam?.BMI || ""),
+                    textContentValue(
+                      physicalExam?.BMI ? physicalExam?.BMI + " kg/m²" : ""
+                    ),
                   ],
                 ],
               },
@@ -707,7 +876,7 @@ function getContentResultPhysicalExaminations(
             },
             {
               table: {
-                widths: [142, 5, "*"],
+                widths: [132, 5, "*"],
                 body: [
                   [
                     {
@@ -719,7 +888,10 @@ function getContentResultPhysicalExaminations(
                       ),
                     },
                     ":",
-                    textContentValue(physicalExam?.bloodPressure || ""),
+                    textContentValue(
+                      `${physicalExam?.systole}/${physicalExam?.dyastole}` +
+                        " mmHg"
+                    ),
                   ],
                   [
                     {
@@ -731,7 +903,11 @@ function getContentResultPhysicalExaminations(
                       ),
                     },
                     ":",
-                    textContentValue(physicalExam?.pulse || ""),
+                    textContentValue(
+                      physicalExam?.heartRate
+                        ? physicalExam.heartRate + " x/menit"
+                        : ""
+                    ),
                   ],
                   [
                     {
@@ -743,7 +919,11 @@ function getContentResultPhysicalExaminations(
                       ),
                     },
                     ":",
-                    textContentValue(physicalExam?.temperature || ""),
+                    textContentValue(
+                      physicalExam?.temperatur
+                        ? physicalExam.temperatur + " °C"
+                        : ""
+                    ),
                   ],
                   [
                     {
@@ -755,7 +935,9 @@ function getContentResultPhysicalExaminations(
                       ),
                     },
                     ":",
-                    textContentValue(physicalExam?.respiration || ""),
+                    textContentValue(
+                      physicalExam?.spo2 ? physicalExam.spo2 + " x/menit" : ""
+                    ),
                   ],
                   [
                     {
@@ -767,7 +949,9 @@ function getContentResultPhysicalExaminations(
                       ),
                     },
                     ":",
-                    textContentValue(physicalExam?.waist || ""),
+                    textContentValue(
+                      physicalExam?.waist ? physicalExam?.waist + " cm" : ""
+                    ),
                   ],
                 ],
               },
@@ -787,7 +971,7 @@ function getContentResultEyes(defaultMarginSubQuery, eye) {
   return [
     {
       table: {
-        widths: [220, 5, 105, 100],
+        widths: [230, 5, 105, 100],
         body: [
           [
             {
@@ -822,8 +1006,8 @@ function getContentResultEyes(defaultMarginSubQuery, eye) {
               margin: defaultMarginSubQuery,
             },
             ":",
-            "", // Tidak ada data di struktur saat ini
-            "", // Tidak ada data di struktur saat ini
+            textContentValue(eye?.rightNearVisus || ""),
+            textContentValue(eye?.leftNearVisus || ""),
           ],
           [
             {
@@ -845,8 +1029,8 @@ function getContentResultEyes(defaultMarginSubQuery, eye) {
               margin: defaultMarginSubQuery,
             },
             ":",
-            "", // Tidak ada data di struktur saat ini
-            "", // Tidak ada data di struktur saat ini
+            textContentValue(eye?.rightFarVisus || ""),
+            textContentValue(eye?.leftFarVisus || ""),
           ],
           [
             {
@@ -949,7 +1133,7 @@ function getContentResultEars(defaultMarginSubQuery, ear) {
   return [
     {
       table: {
-        widths: [220, 5, 105, 100],
+        widths: [230, 5, 105, 100],
         body: [
           [
             {
@@ -1033,7 +1217,7 @@ function getContentResultNose(defaultMarginSubQuery, nose) {
           [
             {
               table: {
-                widths: [210, 5, 210],
+                widths: [220, 5, 210],
                 body: [
                   [
                     {
@@ -1099,7 +1283,7 @@ function getContentResultMouth(defaultMarginSubQuery, mouth) {
           [
             {
               table: {
-                widths: [210, 5, 210],
+                widths: [220, 5, 210],
                 body: [
                   [
                     {
@@ -1177,7 +1361,7 @@ function getContentResultNeck(defaultMarginSubQuery, neck) {
           [
             {
               table: {
-                widths: [210, 5, 210],
+                widths: [220, 5, 210],
                 body: [
                   [
                     {
@@ -1202,6 +1386,18 @@ function getContentResultNeck(defaultMarginSubQuery, neck) {
                     },
                     ":",
                     textContentValue(neck?.kelenjarTiroid || ""),
+                  ],
+                  [
+                    {
+                      text: textContent(
+                        "Lain - lain",
+                        "Etc",
+                        {},
+                        { italics: true }
+                      ),
+                    },
+                    ":",
+                    textContentValue(neck?.otherNeck || ""),
                   ],
                 ],
               },
@@ -1236,7 +1432,7 @@ function getContentResultRaspiratory(defaultMarginSubQuery, raspiratory) {
           [
             {
               table: {
-                widths: [210, 5, 210],
+                widths: [220, 5, 210],
                 body: [
                   [
                     {
@@ -1295,7 +1491,7 @@ function getContentResultRaspiratory(defaultMarginSubQuery, raspiratory) {
         ],
       },
       layout: "noBorders",
-      margin: [0, 0, 0, 5],
+      margin: [0, 0, 0, 0],
     },
   ];
 }
@@ -1319,7 +1515,7 @@ function getContentResultCardioVaskular(defaultMarginSubQuery, cardioVaskular) {
           [
             {
               table: {
-                widths: [210, 5, 210],
+                widths: [220, 5, 210],
                 body: [
                   [
                     {
@@ -1378,7 +1574,7 @@ function getContentResultCardioVaskular(defaultMarginSubQuery, cardioVaskular) {
         ],
       },
       layout: "noBorders",
-      margin: [0, 0, 0, 5],
+      margin: [0, 0, 0, 0],
     },
   ];
 }
@@ -1402,7 +1598,7 @@ function getContentResultDigestivus(defaultMarginSubQuery, digestivus) {
           [
             {
               table: {
-                widths: [210, 5, 210],
+                widths: [220, 5, 210],
                 body: [
                   [
                     {
@@ -1519,7 +1715,7 @@ function getContentResultGenitourinaria(defaultMarginSubQuery, genitourinaria) {
           [
             {
               table: {
-                widths: [210, 5, 210],
+                widths: [220, 5, 210],
                 body: [
                   [
                     {
@@ -1585,7 +1781,7 @@ function getContentResultLimbSystem(defaultMarginSubQuery, limbSystem) {
           [
             {
               table: {
-                widths: [210, 5, 210],
+                widths: [220, 5, 210],
                 body: [
                   [
                     {
@@ -1686,6 +1882,7 @@ function getContentResultSummary(defaultMarginSubQuery, result) {
       ),
       layout: "noBorders",
       margin: [0, 0, 0, 3],
+      pageBreak: "before",
     },
     {
       table: {
@@ -1695,7 +1892,7 @@ function getContentResultSummary(defaultMarginSubQuery, result) {
             {
               table: {
                 widths: ["*"],
-                body: [[textContentValue(result || "")]],
+                body: [[convertHtmlToPdfMake(result || "")]],
               },
               margin: defaultMarginSubQuery || [10, 0, 0, 0],
               layout: "noBorders",
@@ -1736,7 +1933,7 @@ function getContentResultDoctorDemographySuggestionAndFinallyResult(
             {
               table: {
                 widths: ["*"],
-                body: [[textContentValue(suggestion || "")]],
+                body: [[convertHtmlToPdfMake(suggestion || "")]],
               },
               margin: defaultMarginSubQuery || [10, 0, 0, 0],
               layout: "noBorders",
@@ -1765,7 +1962,7 @@ function getContentResultDoctorDemographySuggestionAndFinallyResult(
             {
               table: {
                 widths: ["*"],
-                body: [[textContentValue("Fit to Work")]],
+                body: [[convertHtmlToPdfMake("Fit to Work")]],
               },
               margin: defaultMarginSubQuery || [10, 0, 0, 0],
               layout: "noBorders",
@@ -1791,19 +1988,18 @@ function getContentResultDoctor(defaultMarginSubQuery, testResults) {
     let suggestionValue = "";
 
     results.forEach((res) => {
-      if (res.result) resultValue += stripHtmlToText(res.result) + "\n";
-      if (res.suggestion)
-        suggestionValue += stripHtmlToText(res.suggestion) + "\n";
+      if (res.result) resultValue += res.result + "\n";
+      if (res.suggestion) suggestionValue += res.suggestion + "\n";
     });
 
     const doctorBlock = {
       stack: [
-        // {
-        //   text: `Doctor: ${doctorName}`,
-        //   margin: [0, 10, 0, 5],
-        //   bold: true,
-        //   fontSize: 12,
-        // },
+        {
+          text: `Doctor: ${doctorName}`,
+          margin: [0, 10, 0, 5],
+          bold: true,
+          fontSize: 12,
+        },
         {
           text: textContent(
             "HASIL ",
@@ -1822,7 +2018,7 @@ function getContentResultDoctor(defaultMarginSubQuery, testResults) {
                 {
                   table: {
                     widths: ["*"],
-                    body: [[textContentValue(resultValue.trim())]],
+                    body: [[convertHtmlToPdfMake(resultValue.trim())]],
                   },
                   margin: defaultMarginSubQuery || [10, 0, 0, 0],
                   layout: "noBorders",
@@ -1851,7 +2047,7 @@ function getContentResultDoctor(defaultMarginSubQuery, testResults) {
                 {
                   table: {
                     widths: ["*"],
-                    body: [[textContentValue(suggestionValue.trim())]],
+                    body: [[convertHtmlToPdfMake(suggestionValue.trim())]],
                   },
                   margin: defaultMarginSubQuery || [10, 0, 0, 0],
                   layout: "noBorders",
@@ -1968,7 +2164,7 @@ const generatePdf = async (rawData, options = {}) => {
         font: "Universe",
         fontSize: 9,
       },
-      pageMargins: [85, 275, 43, 180], // 3cm left, 1.5cm right
+      pageMargins: [85, 275, 43, 120], // 3cm left, 1.5cm right
       header: (currentPage, pageCount) =>
         getHeader(departmentType, currentPage, pageCount, images, demography),
       footer: (currentPage, pageCount) =>
