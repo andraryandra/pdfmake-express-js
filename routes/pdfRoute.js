@@ -1,7 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const axios = require("axios");
-const { generatePdf } = require("../services/pdfService");
+const fs = require("fs/promises"); // menggunakan promises
+const path = require("path");
+const {
+  generateFullPdf, // kalau kamu mau generate tanpa input data
+  generateFullPdfFromExaminations, // kalau kamu bikin fungsi ini di pdfMerge
+} = require("../services/pdf/pdfMerge");
 
 /**
  * @swagger
@@ -61,7 +66,7 @@ router.get("/generate", async (req, res) => {
     const rawData = response.data.data;
 
     // Generate PDF dengan rawData yang diambil dari API
-    const pdfBuffer = await generatePdf(rawData, {
+    const pdfBuffer = await generateFullPdfFromExaminations(rawData, {
       query: req.query,
     });
 
@@ -97,6 +102,74 @@ router.get("/generate", async (req, res) => {
     });
   }
 });
+
+/**
+ * @swagger
+ * /json/generate:
+ *   get:
+ *     summary: Generate PDF laporan pre-assessment laboratorium
+ *     description: Menghasilkan file PDF berdasarkan data pre-assessment laboratorium dari file data.json tanpa parameter apapun
+ *     responses:
+ *       200:
+ *         description: PDF berhasil dibuat dan dikirimkan
+ *         content:
+ *           application/pdf:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       500:
+ *         description: Kesalahan server saat generate PDF
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Gagal membuat PDF karena kesalahan internal server.
+ *                 error:
+ *                   type: string
+ */
+router.get("/json/generate", async (req, res) => {
+  try {
+    const dataPath = path.join(__dirname, "../data.json");
+    const fileData = await fs.readFile(dataPath, "utf-8");
+    const parsedData = JSON.parse(fileData);
+
+    const rawData = parsedData.data;
+
+    if (!rawData) {
+      return res.status(404).json({
+        message: "Data tidak ditemukan di file data.json.",
+      });
+    }
+
+    const pdfBuffer = await generateFullPdfFromExaminations(rawData, {
+      query: {},
+    });
+
+    if (!pdfBuffer || !(pdfBuffer instanceof Buffer)) {
+      return res.status(500).json({
+        message: "Gagal membuat PDF: output generatePdf tidak valid.",
+      });
+    }
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=lab_preassessment.pdf"
+    );
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error("Gagal generate PDF:", error);
+    res.status(500).json({
+      message: "Gagal membuat PDF karena kesalahan internal server.",
+      error: error.message,
+    });
+  }
+});
+
+module.exports = router;
 
 /**
  * @swagger
@@ -219,6 +292,31 @@ router.get("/data", async (req, res) => {
       message: "Terjadi kesalahan pada server.",
       error: error.message,
     });
+  }
+});
+
+router.get("/full", async (req, res) => {
+  try {
+    const jsonPath = path.resolve(__dirname, "../data.json");
+    const jsonData = await fs.readFile(jsonPath, "utf-8");
+    const data = JSON.parse(jsonData);
+
+    const rawData = data.data;
+
+    const { departmentType } = req.query;
+
+    const pdfBuffer = await generateFullPdfFromExaminations(rawData, {
+      query: {
+        departmentType: departmentType || "default",
+      },
+    });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "inline; filename=examinations.pdf");
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error("Error generating full PDF:", err);
+    res.status(500).send("Failed to generate full PDF");
   }
 });
 
