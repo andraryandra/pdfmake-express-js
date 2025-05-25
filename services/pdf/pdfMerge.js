@@ -1,3 +1,4 @@
+require("dotenv").config();
 const PdfPrinter = require("pdfmake");
 const { PDFDocument } = require("pdf-lib");
 const path = require("path");
@@ -40,8 +41,31 @@ const fonts = {
     bolditalics: path.join(fontsPath, "UniversLTStd-BoldObl.otf"),
   },
 };
+const profile = {};
 
-// Fungsi async untuk membuat objek vfs (virtual file system)
+// Ambil path logo dari profile yang kosong
+const logoPathFromProfile = profile.logoPath || "";
+const secondLogoPathFromProfile = profile.secondLogoPath || "";
+
+const logoExist =
+  logoPathFromProfile && fs.existsSync(path.resolve(logoPathFromProfile));
+const secondLogoExist =
+  secondLogoPathFromProfile &&
+  fs.existsSync(path.resolve(secondLogoPathFromProfile));
+
+const logoPath = logoExist
+  ? logoPathFromProfile
+  : process.env.LOGO_PATH
+  ? path.resolve(process.env.LOGO_PATH)
+  : path.resolve("assets/images/default/logo.png");
+
+const secondLogoPath = secondLogoExist
+  ? secondLogoPathFromProfile
+  : process.env.LOGO_KAB_PATH
+  ? path.resolve(process.env.LOGO_KAB_PATH)
+  : path.resolve("assets/images/default/logo2.png");
+
+// Fungsi async membuat objek vfs
 async function createVfs() {
   return {
     "assets/fonts/Universe/UniversRegular.ttf": await readAsset(
@@ -56,15 +80,9 @@ async function createVfs() {
     "assets/fonts/Universe/UniversLTStd-BoldObl.otf": await readAsset(
       "assets/fonts/Universe/UniversLTStd-BoldObl.otf"
     ),
-    "logo.png": await readAsset(
-      process.env.LOGO_PATH || "assets/images/default/logo.png"
-    ),
-    "logo2.png": await readAsset(
-      process.env.LOGO_KAB_PATH || "assets/images/default/logo2.png"
-    ),
-    "tuv.png": await readAsset(
-      process.env.LOGO_KAB_PATH || "assets/images/tuv/tuv.png"
-    ),
+
+    "logo.png": await fs.promises.readFile(logoPath),
+    "logo2.png": await fs.promises.readFile(secondLogoPath),
     "signature.png": await readAsset(
       process.env.SIGNATURE_PATH || "assets/signatures/default/signature.png"
     ),
@@ -108,7 +126,7 @@ function getHeader(
             {
               margin: [0, 0, 20, 0],
               alignment: "right",
-              image: images?.tuv,
+              image: images?.logo,
               width: 220,
               height: 50,
             },
@@ -1932,7 +1950,6 @@ async function generatePdfFromExam(rawData, index = 0, options = {}) {
   const images = {
     logo: "data:image/png;base64," + vfs["logo.png"].toString("base64"),
     logo2: "data:image/png;base64," + vfs["logo2.png"].toString("base64"),
-    tuv: "data:image/png;base64," + vfs["tuv.png"].toString("base64"),
   };
 
   const isGlobal = examination?.isGlobal || false;
