@@ -497,6 +497,10 @@ function generateExamContentGlobal(departmentType, exam) {
   const contents = [
     ...getContentResultHistoryTaking(defaultMarginSubQuery, MCUAnamnesa),
     ...getContentResultHabit(defaultMarginSubQuery, MCUAnamnesa),
+    ...getContentResultHazard(
+      defaultMarginSubQuery,
+      MCUPhysicalExam?.hazardTuv
+    ),
     ...getContentResultPhysicalExaminations(
       defaultMarginSubQuery,
       MCUPhysicalExam
@@ -647,6 +651,171 @@ function getContentResultHabit(defaultMarginSubQuery, anamnesa) {
                     },
                     ":",
                     textContentValue(anamnesa?.amountCoffee || ""),
+                  ],
+                ],
+              },
+              margin: defaultMarginSubQuery || [10, 0, 0, 0],
+              layout: "noBorders",
+            },
+          ],
+        ],
+      },
+      layout: "noBorders",
+      margin: [0, 0, 0, 5],
+    },
+  ];
+}
+
+function getContentResultHazard(defaultMarginSubQuery, hazardTuv) {
+  return [
+    {
+      text: textContent(
+        "RESIKO BAHAYA",
+        "HAZARD",
+        { bold: true, fontSize: 10 },
+        { italics: true }
+      ),
+      layout: "noBorders",
+      margin: [0, 0, 0, 3],
+    },
+    {
+      table: {
+        widths: [455],
+        body: [
+          [
+            {
+              table: {
+                widths: [220, 5, 210],
+                body: [
+                  [
+                    {
+                      text: textContent(
+                        "Kebisingan",
+                        "Noise",
+                        {},
+                        { italics: true }
+                      ),
+                    },
+                    ":",
+                    textContentValue(hazardTuv?.noisePekerja || ""),
+                  ],
+                  [
+                    {
+                      text: textContent(
+                        "Getaran seluruh tubuh",
+                        "Full body vibrate",
+                        {},
+                        { italics: true }
+                      ),
+                    },
+                    ":",
+                    textContentValue(hazardTuv?.fullBodyVibrate || ""),
+                  ],
+                  [
+                    {
+                      text: textContent(
+                        "Logam berat",
+                        "Heavy metal",
+                        {},
+                        { italics: true }
+                      ),
+                    },
+                    ":",
+                    textContentValue(hazardTuv?.heavyMetal || ""),
+                  ],
+
+                  [
+                    {
+                      text: textContent("Pestisida", "", {}, { italics: true }),
+                    },
+                    ":",
+                    textContentValue(hazardTuv?.pesticide || ""),
+                  ],
+
+                  [
+                    {
+                      text: textContent(
+                        "Batuk - batuk",
+                        "Coughing",
+                        {},
+                        { italics: true }
+                      ),
+                    },
+                    ":",
+                    textContentValue(hazardTuv?.coughing || ""),
+                  ],
+
+                  [
+                    {
+                      text: textContent(
+                        "Suhu sangat rendah",
+                        "Low temperature",
+                        {},
+                        { italics: true }
+                      ),
+                    },
+                    ":",
+                    textContentValue(hazardTuv?.lowTempWorker || ""),
+                  ],
+                  [
+                    {
+                      text: textContent(
+                        "Tekanan udara rendah",
+                        "Low Air Pressure",
+                        {},
+                        { italics: true }
+                      ),
+                    },
+                    ":",
+                    textContentValue(hazardTuv?.lowAirPressure || ""),
+                  ],
+                  [
+                    {
+                      text: textContent(
+                        "Bahan iritan",
+                        "Irritant ingredients",
+                        {},
+                        { italics: true }
+                      ),
+                    },
+                    ":",
+                    textContentValue(hazardTuv?.irritantIngredient || ""),
+                  ],
+                  [
+                    {
+                      text: textContent(
+                        "Berdiri lama 4 jam terus menerus",
+                        "Long time standing",
+                        {},
+                        { italics: true }
+                      ),
+                    },
+                    ":",
+                    textContentValue(hazardTuv?.longTimeStanding || ""),
+                  ],
+                  [
+                    {
+                      text: textContent(
+                        "Perubahan perilaku",
+                        "Behaviour change",
+                        {},
+                        { italics: true }
+                      ),
+                    },
+                    ":",
+                    textContentValue(hazardTuv?.behaviourChange || ""),
+                  ],
+                  [
+                    {
+                      text: textContent(
+                        "Lain Lain Fisik",
+                        "Etc",
+                        {},
+                        { italics: true }
+                      ),
+                    },
+                    ":",
+                    textContentValue(hazardTuv?.otherHazardFisik || "-"),
                   ],
                 ],
               },
