@@ -233,12 +233,10 @@ function textLocales(fieldKey, options = {}) {
   };
 }
 
-function formatDate(dateString, formatType = "default") {
+function formatDate(dateString, formatType = "default", separator = "-") {
   if (!dateString) return "";
 
-  const date = new Date(dateString);
-  const day = String(date.getDate()).padStart(2, "0");
-  const year = date.getFullYear();
+  const [year, month, day] = dateString.split("T")[0].split("-");
 
   if (formatType === "monthName") {
     const months = [
@@ -255,13 +253,11 @@ function formatDate(dateString, formatType = "default") {
       "November",
       "Desember",
     ];
-    const monthName = months[date.getMonth()];
-    return `${day} ${monthName} ${year}`;
+    const monthIndex = parseInt(month, 10) - 1;
+    return `${day} ${months[monthIndex]} ${year}`;
   }
 
-  // default: dd-mm-yyyy
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  return `${day}-${month}-${year}`;
+  return `${day}${separator}${month}${separator}${year}`;
 }
 
 function textContent(

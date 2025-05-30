@@ -12,6 +12,7 @@ const {
   textContent,
   textContentValue,
 } = require("../../utils/pdf/pdfUtils");
+const axios = require("axios");
 
 // ROOT folder project, sesuaikan jika perlu
 const rootPath = path.resolve(__dirname, "..", ".."); // contoh: dari /services ke root proyek
@@ -108,13 +109,25 @@ function getHeader(
   pageCount,
   images,
   demography,
-  data
+  data,
+  certificate
 ) {
   const doctorName = data?.doctor?.name
     ? data.doctor.name
     : demography?.doctor
     ? demography.doctor
     : "";
+
+  const headerCertificate = [
+    { text: "Certificate Health Assessment\n", fontSize: 14, bold: true },
+    { text: "Sertifikat Pemeriksaan Kesehatan", italics: true },
+  ];
+
+  const resultCertificate = certificate || {};
+
+  const validatedSignatureImage = resultCertificate?.occupationDoctor?.signature
+    ? `data:image/png;base64,${resultCertificate?.occupationDoctor?.signature}`
+    : null;
 
   const commonHeader = [
     {
@@ -145,9 +158,10 @@ function getHeader(
               alignment: "center",
               fontSize: 12,
               bold: true,
-              text:
-                "LAPORAN HASIL " +
-                (data?.nameTest?.toUpperCase() ?? "MEDICAL CHECK UP"),
+              text: certificate
+                ? headerCertificate
+                : "LAPORAN HASIL " +
+                  (data?.nameTest?.toUpperCase() ?? "MEDICAL CHECK UP"),
             },
           ],
         ],
@@ -262,12 +276,174 @@ function getHeader(
     },
   ];
 
-  const commonHeaderDefault = [
-    ...commonHeader,
-    ...commonDemography,
-    //
+  const commonDemographyCertificateDateOfExamination = (() => {
+    function getOrdinalSuffix(day) {
+      if (day > 3 && day < 21) return "th";
+      switch (day % 10) {
+        case 1:
+          return "st";
+        case 2:
+          return "nd";
+        case 3:
+          return "rd";
+        default:
+          return "th";
+      }
+    }
+
+    function formatDatePartsWithSuperscript(dateInput) {
+      const date = new Date(dateInput);
+      if (isNaN(date)) return [];
+
+      const day = date.getDate();
+      const suffix = getOrdinalSuffix(day);
+
+      const month = date.toLocaleString("id-ID", { month: "long" });
+      const year = date.getFullYear();
+
+      return [
+        { text: `${month} ` },
+        { text: `${day}`, fontSize: 12 },
+        {
+          text: suffix,
+          fontSize: 8,
+          margin: [0, -4.5, 0, 0],
+        },
+        { text: `, ${year}` },
+      ];
+    }
+
+    return resultCertificate
+      ? [
+          {
+            table: {
+              widths: ["*", "*"],
+              body: [
+                [
+                  {
+                    text: [
+                      { text: "DATE OF EXAMINATION\n", bold: true },
+                      { text: "Tanggal Pemeriksaan", italics: true },
+                    ],
+                    alignment: "center",
+                    margin: [0, 5, 0, 5],
+                  },
+                  {
+                    text: [
+                      ...formatDatePartsWithSuperscript(
+                        resultCertificate.examDate
+                      ),
+                    ],
+                    alignment: "center",
+                    margin: [0, 5, 0, 5],
+                  },
+                ],
+              ],
+            },
+            margin: [85, 10, 43, 0],
+            layout: {
+              hLineWidth: () => 1,
+              vLineWidth: () => 1,
+              hLineColor: () => "black",
+              vLineColor: () => "black",
+              paddingLeft: () => 5,
+              paddingRight: () => 5,
+              paddingTop: () => 5,
+              paddingBottom: () => 5,
+            },
+          },
+        ]
+      : null;
+  })();
+
+  const commonDemographyCertificateDoctor = {
+    table: {
+      widths: ["*", "*"],
+      body: [
+        [
+          {
+            text: [
+              { text: "GENERAL PRACTITIONER\n", bold: true },
+              { text: "Dokter Umum", italics: true },
+            ],
+            alignment: "center",
+            margin: [0, 5, 0, 5],
+          },
+          {
+            text: resultCertificate?.generalDoctor?.name
+              ? `${resultCertificate.generalDoctor.name}\n${
+                  resultCertificate.generalDoctor.sip || ""
+                }`
+              : "-",
+            alignment: "center",
+            margin: [0, 5, 0, 5],
+          },
+        ],
+        [
+          {
+            text: [
+              { text: "OCCUPATIONAL HEALTH DOCTOR\n", bold: true },
+              { text: "Dokter Spesialis Okupasi", italics: true },
+            ],
+            alignment: "center",
+            margin: [0, 5, 0, 5],
+          },
+          {
+            text: resultCertificate?.occupationDoctor?.name
+              ? `${resultCertificate.occupationDoctor.name}\n${resultCertificate.occupationDoctor.sip}`
+              : "-",
+            alignment: "center",
+            margin: [0, 5, 0, 5],
+          },
+        ],
+        [
+          {
+            text: [
+              { text: "VERIFIED BY\n", bold: true },
+              { text: "Diverifikasi Oleh", italics: true },
+            ],
+            alignment: "center",
+            margin: [0, 5, 0, 5],
+          },
+          certificate
+            ? {
+                image: validatedSignatureImage,
+                width: 75,
+                alignment: "center",
+                margin: [0, 5, 0, 5],
+              }
+            : {
+                text: "No Signature",
+                italics: true,
+                alignment: "center",
+                margin: [0, 5, 0, 5],
+              },
+        ],
+      ],
+    },
+    margin: [85, 10, 43, 0],
+    layout: {
+      hLineWidth: () => 1,
+      vLineWidth: () => 1,
+      hLineColor: () => "black",
+      vLineColor: () => "black",
+      paddingLeft: () => 5,
+      paddingRight: () => 5,
+      paddingTop: () => 5,
+      paddingBottom: () => 5,
+    },
+  };
+
+  const commonDemographyCertificate = [
+    commonDemographyCertificateDateOfExamination,
+    commonDemographyCertificateDoctor,
   ];
 
+  const commonHeaderDefault = [
+    ...commonHeader,
+    certificate ? [commonDemographyCertificate] : [commonDemography],
+    //
+  ];
   switch (departmentType) {
     default:
       return commonHeaderDefault;
@@ -281,7 +457,8 @@ function getFooter(
   signatureImage,
   data,
   demography,
-  doctors
+  doctors,
+  certificate
 ) {
   const commonFooterDefault = [];
   const doctorName = data?.doctor?.name
@@ -347,7 +524,7 @@ function getFooter(
   };
 
   if (currentPage === pageCount) {
-    commonFooterDefault.push(signature);
+    commonFooterDefault.push(certificate ? null : signature);
   }
 
   const informationSite = {
@@ -2103,11 +2280,155 @@ function generateExamContentTestResult(departmentType, exam) {
   }
 }
 
+function getContentCertificate(departmentType, certificate) {
+  const { finalResult, photoUrl } = certificate || {};
+
+  const resultCertificate = certificate || {};
+
+  const informationUserCertificate = [
+    {
+      table: {
+        widths: ["*", "*"],
+        body: [
+          [
+            {
+              stack: [
+                {
+                  text: [{ text: "Selena Gomez", bold: true, fontSize: 12 }],
+                  alignment: "left",
+                  margin: [0, 5, 0, 5],
+                },
+              ],
+            },
+            {
+              stack: [
+                {
+                  text: [
+                    {
+                      text: `${resultCertificate?.age} yo \n`,
+                      bold: true,
+                      fontSize: 12,
+                    },
+                    {
+                      text: formatDate(resultCertificate?.dob, "default", "/"),
+                      fontSize: 12,
+                    },
+                  ],
+                  alignment: "right",
+                  margin: [0, 5, 0, 5],
+                },
+              ],
+            },
+          ],
+        ],
+      },
+      layout: "noBorders",
+    },
+  ];
+
+  const informationBarcodeCertificate = [
+    {
+      table: {
+        widths: [100, "*", 120],
+        body: [
+          [
+            {
+              image: photoUrl || "data:image/png;base64,",
+              width: 100,
+              alignment: "center",
+            },
+            {
+              stack: [
+                {
+                  text: (finalResult?.finalExam || "-").toUpperCase(),
+                  bold: true,
+                  fontSize: 16,
+                  margin: [0, 0, 0, 10],
+                },
+                { text: "Conclusion", italics: true, fontSize: 16 },
+              ],
+              margin: [5, 10, 5, 10],
+              fillColor: "white",
+            },
+            {
+              text: "",
+              alignment: "center",
+              margin: [0, 15, 0, 15],
+              fillColor: "white",
+            },
+          ],
+        ],
+      },
+      layout: {
+        hLineWidth: (i, node) =>
+          i === 0 || i === node.table.body.length ? 0.3 : 0.3,
+        vLineWidth: (i, node) => {
+          if (i === 2) return 0;
+          if (i === 0 || i === node.table.widths.length) return 0.3;
+          return 0.3;
+        },
+        hLineColor: () => "black",
+        vLineColor: () => "black",
+        paddingLeft: () => 5,
+        paddingRight: () => 5,
+        paddingTop: () => 5,
+        paddingBottom: () => 5,
+      },
+    },
+  ];
+
+  const commonContentCertificate = [
+    informationUserCertificate,
+    [
+      {
+        text: resultCertificate?.company || "-",
+        margin: [0, 10, 0, 5],
+      },
+    ],
+    informationBarcodeCertificate,
+  ];
+
+  switch (departmentType) {
+    default:
+      return commonContentCertificate || [];
+  }
+}
+
+async function getImageBase64(photo) {
+  try {
+    // Validasi URL
+    if (!photo) {
+      console.warn("⚠️ photo is empty or undefined.");
+      return null;
+    }
+
+    const url = new URL(photo);
+
+    if (!["http:", "https:"].includes(url.protocol)) {
+      console.warn("⚠️ Invalid protocol:", url.protocol);
+      return null;
+    }
+
+    // Fetch image as arraybuffer
+    const response = await axios.get(photo, {
+      responseType: "arraybuffer",
+    });
+
+    const base64 = Buffer.from(response.data, "binary").toString("base64");
+    const mimeType = response.headers["content-type"] || "image/jpeg";
+    return `data:${mimeType};base64,${base64}`;
+  } catch (error) {
+    console.error("❌ Failed to fetch image:", error.message || error);
+    return null;
+  }
+}
+
 async function generatePdfFromExam(rawData, index = 0, options = {}) {
   const { query = {} } = options;
   const departmentType = (query.departmentType || "default").toLowerCase();
 
-  const { demography, finalResult, doctors, data, examination } = rawData;
+  const { demography, finalResult, doctors, data, examination, certificate } =
+    rawData;
 
   const { printer, vfs } = await createPdfPrinter();
 
@@ -2147,11 +2468,27 @@ async function generatePdfFromExam(rawData, index = 0, options = {}) {
     if (Array.isArray(doctorContentTestResult)) {
       content.push(...doctorContentTestResult);
     }
+  } else if (certificate) {
+    let photoUrl = null;
+    if (certificate?.photo) {
+      photoUrl = await getImageBase64(certificate.photo);
+    }
+
+    const certificateContent = getContentCertificate(departmentType, {
+      ...certificate,
+      data,
+      finalResult,
+      photoUrl,
+    });
+
+    if (Array.isArray(certificateContent)) {
+      content.push(...certificateContent);
+    }
   }
 
   const docDefinition = {
     pageSize: "A4",
-    pageMargins: [85, 270, 43, 180],
+    pageMargins: [85, certificate ? 410 : 270, 43, 180],
     defaultStyle: {
       font: "Universe",
       fontSize: 9,
@@ -2163,7 +2500,8 @@ async function generatePdfFromExam(rawData, index = 0, options = {}) {
         pageCount,
         images,
         demography,
-        data || examination?.data || {}
+        data || examination?.data || {},
+        certificate
       ),
     footer: (currentPage, pageCount) =>
       getFooter(
@@ -2173,7 +2511,8 @@ async function generatePdfFromExam(rawData, index = 0, options = {}) {
         signatureImage,
         data || examination?.data || {},
         demography,
-        doctors
+        doctors,
+        certificate
       ),
     content,
   };
@@ -2208,6 +2547,8 @@ async function generateFullPdfFromExaminations(rawData, options = {}) {
     const examinations = Array.isArray(rawData.examination)
       ? rawData.examination
       : [];
+
+    const examCertificate = rawData.certificate || {};
 
     // Pisahkan testResult dan non-testResult
     const testResultExams = examinations.filter(
@@ -2266,6 +2607,22 @@ async function generateFullPdfFromExaminations(rawData, options = {}) {
       buffers.push(pdfBuffer);
     }
 
+    if (examCertificate && Object.keys(examCertificate).length > 0) {
+      const examDataCertificate = {
+        demography: rawData.demography,
+        finalResult: rawData.finalResult,
+        doctors: rawData.doctors,
+        certificate: examCertificate,
+      };
+
+      const pdfBuffer = await generatePdfFromExam(
+        examDataCertificate,
+        0,
+        options
+      );
+
+      buffers.push(pdfBuffer);
+    }
     return await mergePdfBuffers(buffers);
   } catch (err) {
     console.error("Error generating full PDF from examinations:", err);
