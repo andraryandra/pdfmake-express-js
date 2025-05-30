@@ -2294,7 +2294,9 @@ function getContentCertificate(departmentType, certificate) {
             {
               stack: [
                 {
-                  text: [{ text: "Selena Gomez", bold: true, fontSize: 12 }],
+                  text: [
+                    { text: resultCertificate?.name, bold: true, fontSize: 12 },
+                  ],
                   alignment: "left",
                   margin: [0, 5, 0, 5],
                 },
